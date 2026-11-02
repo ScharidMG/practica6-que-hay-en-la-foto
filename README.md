@@ -154,9 +154,11 @@ Los detalles de cada endpoint están en [docs/api.md](docs/api.md).
 
 ## Integrantes
 
-| Nombre | Código | Usuario de GitHub |
-|---|---|---|
-| | | |
+| Integrante | Código |
+|---|---|
+| Michell Mahecha | 1152407 |
+| Cristian Zambrano | 1152408 |
+| Scharid Maldonado | 1152418 |
 
 ## URL de la aplicación
 
@@ -168,7 +170,13 @@ Frontend:
 
 ## Evidencias por fase
 
-<!-- Una subsección por cada fase de la guía, con capturas o salidas de comandos y unas líneas de lo que observaste. -->
+## Fase 0. Preparación
+![Evidencia 0a](./Evidencias/Evidencia0a.png)
+![Evidencia 0b](./Evidencias/Evidencia0b.png)
+## Fase 1. Preparación
+![Evidencia 1a](./Evidencias/Evidencia1a.jpeg)
+![Evidencia 1b](./Evidencias/Evidencia1b.png)
+![Evidencia 1c](./Evidencias/Evidencia1c.png)
 
 ## Decisiones del reto
 
