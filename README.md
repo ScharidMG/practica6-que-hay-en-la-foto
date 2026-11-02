@@ -177,6 +177,11 @@ Frontend:
 ![Evidencia 1a](./Evidencias/Evidencia1a.jpeg)
 ![Evidencia 1b](./Evidencias/Evidencia1b.png)
 ![Evidencia 1c](./Evidencias/Evidencia1c.png)
+## Fase 2. Preparación
+![Evidencia 2a](./Evidencias/Evidencia2a.jpeg)
+![Evidencia 2b](./Evidencias/Evidencia2b.png)
+![Evidencia 2c](./Evidencias/Evidencia2c.png)
+
 
 ## Decisiones del reto
 
