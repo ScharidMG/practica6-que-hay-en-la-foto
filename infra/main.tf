@@ -54,6 +54,12 @@ resource "google_cloud_run_v2_service" "backend" {
           memory = "1Gi"
         }
       }
+
+      # NUEVO: el nombre del bucket, para que el backend sepa dónde guardar
+      env {
+        name  = "BUCKET"
+        value = google_storage_bucket.fotos.name
+      }
     }
   }
 
