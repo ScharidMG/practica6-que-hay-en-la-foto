@@ -171,16 +171,47 @@ Frontend:
 ## Evidencias por fase
 
 ## Fase 0. Preparación
+
 ![Evidencia 0a](./Evidencias/Evidencia0a.png)
+
 ![Evidencia 0b](./Evidencias/Evidencia0b.png)
-## Fase 1. Preparación
+
+## Fase 1. Registro, imágenes y el primer despliegue
+
 ![Evidencia 1a](./Evidencias/Evidencia1a.jpeg)
+
 ![Evidencia 1b](./Evidencias/Evidencia1b.png)
+
 ![Evidencia 1c](./Evidencias/Evidencia1c.png)
-## Fase 2. Preparación
+
+## Fase 2. El bucket
+
 ![Evidencia 2a](./Evidencias/Evidencia2a.jpeg)
+
 ![Evidencia 2b](./Evidencias/Evidencia2b.png)
+
 ![Evidencia 2c](./Evidencias/Evidencia2c.png)
+
+## Fase 3. Vision
+
+![Evidencia 3a](./Evidencias/Evidencia3a.jpeg)
+
+![Evidencia 3b](./Evidencias/Evidencia3b.png)
+
+![Evidencia 3c](./Evidencias/Evidencia3c.png)
+
+## Fase 4 – Ponerlo a prueba
+
+| # | Foto | Quién | Etiqueta 1 | Etiqueta 2 | Etiqueta 3 | ¿Acertó? ¿Qué le faltó? |
+|---|---|---|---|---|---|---|
+| 1 | Zapato (común, bien iluminado) | Cristian | Walking Shoe 85 % | Sneakers 82 % | Cross Training Shoe 82 % | Acertó, y hasta el tipo de zapato. Es un objeto muy común en internet. |
+| 2 | Bandera de Colombia (típico de la región) | Cristian | Orange 92 % | Screenshot 50 % | — | Falló: no reconoció la bandera. Solo vio un color y que era una captura de pantalla. Solo dio dos etiquetas. Lo local lo reconoce peor que lo común. |
+| 3 | Dibujo a mano | Michell | Paper 85 % | Paper Product 83 % | Office supplies 71 % | Falló: vio la hoja, pero no lo que estaba dibujado. Etiquetó el material en vez del contenido. |
+| 4 | Página con texto | Scharid | Paper 87 % | Number 85 % | Paper Product 77 % | A medias: supo que era papel con números, pero no leyó lo que dice. Leer texto es otra función (`text_detection`), que es parte del reto. |
+| 5 | Zapato movido | Michell | Silver 74 % | Walking Shoe 72 % | Foot 66 % | A medias: todavía reconoce el zapato, pero la primera etiqueta pasó a ser un color, y la confianza del zapato bajó de 85 % a 72 %. |
+
+Conclusión: Vision acierta con objetos comunes y bien iluminados, pero falla con lo local (la bandera), con los dibujos (ve el papel, no lo dibujado) y con el texto (sabe que hay números, pero no los lee). Cuando la foto está movida, baja la confianza y aparecen etiquetas vagas como colores.
+
 
 
 ## Decisiones del reto
