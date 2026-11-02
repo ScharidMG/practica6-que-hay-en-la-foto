@@ -162,11 +162,35 @@ Los detalles de cada endpoint están en [docs/api.md](docs/api.md).
 
 ## URL de la aplicación
 
-Frontend:
+Frontend: https://practica6-frontend-osxnccwgoq-uc.a.run.app
+
+Backend: https://practica6-backend-osxnccwgoq-uc.a.run.app
 
 ## Diagrama propio
 
-<!-- Tu diagrama en Mermaid de lo que desplegaste, con los nombres reales de tus recursos. -->
+```mermaid
+flowchart LR
+    telefono(["Teléfono"])
+
+    subgraph proyecto["Proyecto computanube · us-central1"]
+        frontend["practica6-frontend<br/>Cloud Run, público<br/>cuenta practica6-frontend"]
+        backend["practica6-backend<br/>Cloud Run, público<br/>cuenta practica6-backend<br/>BUCKET = computanube-practica6-fotos"]
+        registro["practica6-imagenes<br/>Artifact Registry<br/>backend:v2 · frontend:v2"]
+        bucket[("computanube-practica6-fotos<br/>Cloud Storage, privado<br/>originales/ y miniaturas/<br/>borra objetos de más de 7 días")]
+        vision["vision.googleapis.com<br/>label_detection y text_detection"]
+    end
+
+    telefono -->|"carga la página"| frontend
+    telefono -->|"POST /fotos, GET /fotos,<br/>GET /fotos/id/miniatura"| backend
+    backend -->|"guarda original y miniatura<br/>con autor, etiquetas y texto"| bucket
+    backend -->|"pide etiquetas y texto<br/>de la miniatura"| vision
+    registro -.->|"imagen"| frontend
+    registro -.->|"imagen"| backend
+
+    backend -.->|"roles/storage.objectUser<br/>solo sobre este bucket"| bucket
+```
+
+La única flecha de IAM que creamos es la del backend sobre el bucket (`google_storage_bucket_iam_member.backend_objetos`). Vision no necesita rol: basta con que la API esté habilitada en el proyecto y que el backend use una cuenta de servicio del mismo proyecto.
 
 ## Evidencias por fase
 
@@ -231,6 +255,7 @@ La miniatura pesa unas 24 veces menos que el original. Como la salida de datos d
 ## Fase 6. Reto de la semana: leer, limpiar y contar
 
 1. leer el texto con Vision
+
 ![Evidencia 6a](./Evidencias/Evidencia6a.jpeg)
 
 2. Limpieza automática.
@@ -252,12 +277,59 @@ Supuestos por foto, según el código: Vision usa 2 unidades (`label_detection` 
 
 **Lo primero que se agota es Vision, a las 500 fotos al mes.** Sin la lectura de texto serían 1.000. Las operaciones de clase A son las segundas, y bajan si la galería se recarga muchas veces. El espacio está lejos del límite gracias a la regla de 7 días. La salida de datos no tiene cuota, pero como solo se sirven miniaturas, es muy barata.
 
+4. Reproducción.
+
+![Evidencia 6c](./Evidencias/Evidencia6c.png)
+
+![Evidencia 6d](./Evidencias/Evidencia6d.png)
+
+![Evidencia 6e](./Evidencias/Evidencia6e.jpeg)
 
 
 ## Decisiones del reto
 
-<!-- Qué cambiaste, por qué y cómo comprobaste que funciona. -->
+### Cómo mostramos el texto
+
+El backend hace una segunda llamada a Vision, `text_detection`, sobre la misma miniatura (función `leer_texto` en `backend/main.py`). El texto leído se guarda como un metadato más de la miniatura (`texto`), el endpoint `GET /fotos` lo devuelve, y la galería lo muestra debajo de la foto como "Texto: ...", recortado a 120 caracteres.
+
+- **Cuando Vision no encuentra texto**, se guarda una cadena vacía y la galería no muestra nada. Si la llamada falla, también se guarda vacío y el backend deja una advertencia en sus registros; la foto se guarda igual.
+- **Cuánto texto cabe en un metadato**: los metadatos personalizados de un objeto suman como máximo 8 KiB. Recortamos el texto a 4.000 bytes para dejar espacio al autor y a las etiquetas.
+- Cada foto gasta ahora 2 unidades de Vision en vez de 1. Para desplegar el cambio usamos imágenes nuevas, `backend:v2` y `frontend:v2`, y las cambiamos en `terraform.tfvars`.
+
+### La edad de la regla de ciclo de vida
+
+En `storage.tf` agregamos al bucket una `lifecycle_rule` con `condition { age = 7 }` y `action { type = "Delete" }`.
+
+- **Por qué 7 días**: alcanza para la semana de la práctica y la revisión. Con 1 día se borrarían fotos antes de revisarlas, y con 30 se acumularía más espacio y nos acercaríamos a los 5 GB gratis.
+- **Un objeto subido el día en que corre la regla** tiene edad 0, así que no se borra. Se borra cuando cumpla 7 días. Google evalúa la regla de forma asíncrona, más o menos una vez al día, y el borrado puede tardar hasta 24 horas después de cumplirse la condición.
+- **Cómo comprobaríamos que funciona**: anotar el nombre de una foto de hoy, volver a listar el bucket con `gcloud storage ls gs://computanube-practica6-fotos/miniaturas/` dentro de 8 o 9 días, y verificar que ya no está.
+
+### Qué cuota se agota primero
+
+Vision, a las 500 fotos al mes. Los números y de dónde salen están en la evidencia de la fase 6, punto 3: tamaños reales de nuestro bucket (`gcloud storage ls -l`), la cuota gratuita de la tabla "Lo que cuesta" de la guía y el gasto por foto según el código del backend y del frontend.
+
+### Cómo reproducimos
+
+Con `terraform destroy` se borró todo y se volvió a crear sin pasos en la consola, en este orden:
+
+1. `terraform apply -target=google_artifact_registry_repository.registro`: las APIs y el registro.
+2. `docker build` y `docker push` de `backend:v2` y `frontend:v2`, porque el destroy borró el registro con sus imágenes.
+3. `terraform apply`: las cuentas de servicio y el bucket, después el permiso del backend sobre el bucket, después el backend (necesita el nombre del bucket) y por último el frontend (necesita la URL del backend).
+
+El bucket se volvió a crear con el mismo nombre, `computanube-practica6-fotos`, porque el nombre sale de las variables (proyecto y prefijo). Las URLs de Cloud Run también quedaron iguales. Las APIs no se apagaron con el destroy gracias a `disable_on_destroy = false`.
+
+**Sin `force_destroy = true`**, el `terraform destroy` fallaría con un error de que el bucket no está vacío, porque Google no deja borrar un bucket que tiene objetos. Habría que vaciarlo a mano antes, y eso rompe la regla de no hacer pasos manuales.
 
 ## Preguntas
 
-<!-- Las respuestas a las preguntas de la guía. -->
+**1. ¿Por qué la foto de la fase 2 sigue sin etiquetas después de habilitar Vision, y qué tendría que cambiar en el backend para que las tuviera?**
+
+Porque el backend le pregunta a Vision una sola vez, en el momento en que recibe la foto (`subir()` llama a `etiquetar()` antes de guardar), y el resultado queda escrito como metadato de la miniatura. Cuando subimos esa foto la API no estaba habilitada, así que se guardó con `etiquetas` vacío y `vision: error: 403...`. Habilitar Vision después no cambia nada de lo que ya está en el bucket, porque nadie vuelve a preguntar por esa foto. Para que la tuviera, el backend necesitaría una forma de volver a etiquetar: por ejemplo un endpoint como `POST /fotos/<id>/reetiquetar`, o un proceso que recorra `miniaturas/`, busque los objetos cuyo metadato `vision` no sea `ok`, descargue cada miniatura, llame a `etiquetar()` y actualice sus metadatos.
+
+**2. Si le quitan el permiso `storage.objectUser` a la cuenta del backend, ¿qué deja de funcionar, qué ve el usuario y dónde encontrarían el error?**
+
+Deja de funcionar todo lo que toca el bucket, porque ese rol es el único permiso que tiene la cuenta del backend: subir fotos (crear objetos), cargar la galería (listar objetos) y mostrar las miniaturas (leer objetos). El usuario ve que la subida falla con un error del servidor (500), que la galería no carga y que las imágenes no aparecen. La página y el backend siguen en línea; lo que falla es cada acceso al bucket. El error se encuentra en los registros del servicio `practica6-backend` en Cloud Run, como un `403 Forbidden` que dice que la cuenta `practica6-backend@computanube.iam.gserviceaccount.com` no tiene permiso `storage.objects.create` o `storage.objects.list` sobre el bucket.
+
+**3. ¿Por qué el backend le manda a Vision la miniatura y no el original? Den dos razones distintas.**
+
+Primera, el tamaño: la miniatura pesa unas 24 veces menos que el original (≈ 110 KB contra ≈ 2,6 MB en nuestro bucket), así que la petición a Vision viaja más rápido, el usuario espera menos por sus etiquetas, el backend usa menos memoria y se evita pasar el límite de tamaño de imagen que acepta Vision. Segunda, no hace falta más resolución: para reconocer qué hay en una foto basta con 1024 píxeles por lado, y Vision cobra lo mismo por unidad sin importar el tamaño de la imagen. Además, la miniatura ya viene con la orientación corregida a partir de los datos EXIF, así que Vision ve la foto derecha, como la ve el usuario.
