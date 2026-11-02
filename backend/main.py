@@ -99,6 +99,28 @@ def etiquetar(datos_jpeg):
         log.warning("Vision no respondió: %s", error)
         return None, str(error)
 
+# Los metadatos personalizados de un objeto suman como máximo 8 KiB.
+# Se recorta el texto para dejar espacio al autor y a las etiquetas.
+MAX_BYTES_TEXTO = 4000
+
+
+def leer_texto(datos_jpeg):
+    """Pide a Vision el texto de la imagen. Devuelve "" si no hay o si falla."""
+    try:
+        respuesta = vision_cliente().text_detection(
+            image=vision.Image(content=datos_jpeg)
+        )
+        if respuesta.error.message:
+            raise RuntimeError(respuesta.error.message)
+        if not respuesta.text_annotations:
+            return ""
+        # La primera anotación trae todo el texto junto.
+        texto = respuesta.text_annotations[0].description.strip()
+        return texto.encode("utf-8")[:MAX_BYTES_TEXTO].decode("utf-8", "ignore")
+    except Exception as error:  # noqa: BLE001
+        log.warning("Vision no leyó el texto: %s", error)
+        return ""
+
 
 def como_json(blob):
     meta = blob.metadata or {}
@@ -109,6 +131,7 @@ def como_json(blob):
         "creado": blob.time_created.isoformat() if blob.time_created else None,
         "etiquetas": json.loads(etiquetas) if etiquetas else None,
         "vision": meta.get("vision", "sin etiquetas"),
+        "texto": meta.get("texto", ""),
         "miniatura": f"/fotos/{blob.name.removeprefix('miniaturas/').removesuffix('.jpg')}/miniatura",
     }
 
@@ -144,6 +167,7 @@ def subir():
     # Vision trabaja sobre la miniatura: es más liviana y para etiquetas
     # basta con una imagen pequeña.
     etiquetas, error_vision = etiquetar(miniatura)
+    texto = leer_texto(miniatura)
 
     foto_id = f"{ahora():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}"
     extension = (archivo.mimetype or "image/jpeg").split("/")[-1]
@@ -158,6 +182,7 @@ def subir():
         "autor": autor,
         "etiquetas": json.dumps(etiquetas, ensure_ascii=False) if etiquetas else "",
         "vision": "ok" if etiquetas is not None else f"error: {error_vision}",
+        "texto": texto,
     }
     blob.upload_from_string(miniatura, content_type="image/jpeg")
     blob.reload()

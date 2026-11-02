@@ -232,6 +232,11 @@
         detalle.textContent = "sin etiquetas";
         detalle.className = "ambar";
       }
+      if (f.texto) {
+        const leido = document.createElement("span");
+        leido.textContent = "Texto: " + f.texto.slice(0, 120);
+        pie.append(leido);
+      }
       pie.append(autor, detalle);
       li.append(img, pie);
       galeria.append(li);
