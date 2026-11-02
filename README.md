@@ -212,6 +212,24 @@ Frontend:
 
 Conclusión: Vision acierta con objetos comunes y bien iluminados, pero falla con lo local (la bandera), con los dibujos (ve el papel, no lo dibujado) y con el texto (sabe que hay números, pero no los lee). Cuando la foto está movida, baja la confianza y aparecen etiquetas vagas como colores.
 
+## Fase 5. Mirar el bucket
+
+![Evidencia 5a](./Evidencias/Evidencia5a.png)
+
+Con `gcloud storage ls -l` se ven los 11 originales y sus 11 miniaturas:
+
+| | Original | Miniatura |
+|---|---|---|
+| Foto `20261102-013323-9dcd85` | 3.112.748 bytes (≈ 3,1 MB) | 159.199 bytes (≈ 159 KB) |
+| Promedio de 11 fotos | 2.640.354 bytes (≈ 2,6 MB) | 110.039 bytes (≈ 110 KB) |
+| Total | 29.043.894 bytes (27,70 MiB) | 1.210.433 bytes (1,15 MiB) |
+
+![Evidencia 5b](./Evidencias/Evidencia5b.png)
+
+La miniatura pesa unas 24 veces menos que el original. Como la salida de datos de Cloud Run hacia Colombia cuesta USD 0,19 por GiB, el backend solo sirve miniaturas: cada vista de la galería cuesta 24 veces menos que si sirviera los originales. Además, las "carpetas" `originales/` y `miniaturas/` no existen: son parte del nombre de cada objeto.
+
+## Fase 6. Reto de la semana: leer, limpiar y contar
+
 
 
 ## Decisiones del reto
