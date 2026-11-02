@@ -230,7 +230,8 @@ La miniatura pesa unas 24 veces menos que el original. Como la salida de datos d
 
 ## Fase 6. Reto de la semana: leer, limpiar y contar
 
-
+1. leer el texto con Vision
+![Evidencia 6a](./Evidencias/Evidencia6a.jpeg)
 
 ## Decisiones del reto
 
