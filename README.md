@@ -164,8 +164,6 @@ Los detalles de cada endpoint están en [docs/api.md](docs/api.md).
 
 Frontend: https://practica6-frontend-osxnccwgoq-uc.a.run.app
 
-Backend: https://practica6-backend-osxnccwgoq-uc.a.run.app
-
 ## Diagrama propio
 
 ```mermaid
