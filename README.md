@@ -233,6 +233,27 @@ La miniatura pesa unas 24 veces menos que el original. Como la salida de datos d
 1. leer el texto con Vision
 ![Evidencia 6a](./Evidencias/Evidencia6a.jpeg)
 
+2. Limpieza automática.
+
+![Evidencia 6b](./Evidencias/Evidencia6b.png)
+
+3. La cuenta de la cuota gratuita
+
+Datos reales de nuestro bucket (11 fotos): original promedio 2.640.354 bytes (≈ 2,6 MB) y miniatura promedio 110.039 bytes (≈ 110 KB). Cuota gratuita mensual tomada de la tabla "Lo que cuesta" de la guía.
+
+Supuestos por foto, según el código: Vision usa 2 unidades (`label_detection` + `text_detection`); Cloud Storage hace 3 operaciones de clase A (subir original, subir miniatura y listar la galería, que el frontend recarga después de cada subida).
+
+| Recurso | Cuota gratis al mes | Gasto por foto | Fotos al mes |
+|---|---|---|---|
+| Vision | 1.000 unidades | 2 unidades | **500** |
+| Operaciones de clase A | 5.000 | 3 | ≈ 1.666 |
+| Espacio | 5 GB | ≈ 2,75 MB durante 7 días (regla de ciclo de vida) | ≈ 7.800 |
+| Salida de datos a Colombia | No hay cuota gratis (USD 0,19 por GiB) | ≈ 110 KB por cada vista de la miniatura | Cuesta desde la primera vista: ≈ 9.700 vistas por USD 0,19 |
+
+**Lo primero que se agota es Vision, a las 500 fotos al mes.** Sin la lectura de texto serían 1.000. Las operaciones de clase A son las segundas, y bajan si la galería se recarga muchas veces. El espacio está lejos del límite gracias a la regla de 7 días. La salida de datos no tiene cuota, pero como solo se sirven miniaturas, es muy barata.
+
+
+
 ## Decisiones del reto
 
 <!-- Qué cambiaste, por qué y cómo comprobaste que funciona. -->
